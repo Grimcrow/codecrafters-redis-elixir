@@ -18,7 +18,7 @@ defmodule Server do
 
     # Uncomment this block to pass the first stage
     #
-    {:ok, socket} = :gen_tcp.listen(6380, [:binary, packet: :line, active: false, reuseaddr: true])
+    {:ok, socket} = :gen_tcp.listen(6379, [:binary, packet: :line, active: false, reuseaddr: true])
     server(socket)
   end
 
