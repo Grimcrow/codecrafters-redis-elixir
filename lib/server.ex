@@ -24,25 +24,8 @@ defmodule Server do
 
   defp server(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
-    serve(client)
-    server(socket)
-  end
-
-  defp serve(client) do
-    client
-    |> read_line
-    |> write_line(client)
-
-    serve(client)
-  end
-
-  defp read_line(client) do
-    {:ok, data} = :gen_tcp.recv(client, 0)
-    data
-  end
-
-  defp write_line(_line, client) do
     :gen_tcp.send(client, :unicode.characters_to_binary("$4\r\nPONG\r\n"))
+    :gen_tcp.shutdown(client, :read)
   end
 
 end
