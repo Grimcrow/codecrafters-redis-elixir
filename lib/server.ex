@@ -42,7 +42,7 @@ defmodule Server do
   end
 
   defp write_line(_line, client) do
-    :gen_tcp.send(client, "+PONG\r\n")
+    :gen_tcp.send(client, "$4\r\n+PONG\r\n")
   end
 
 end
