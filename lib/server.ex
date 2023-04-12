@@ -52,7 +52,7 @@ defmodule Server do
   end
 
   defp write_data(client, _data) do
-    :gen_tcp.send(client, "$4\r\nPONG\r\n")
+    :gen_tcp.send(client, :unicode.characters_to_binary("$4\r\nPONG\r\n"))
   end
 
 end
