@@ -39,9 +39,19 @@ defmodule Server do
 
   defp parse_data(data) do
     data
+    |> IO.inspect()
     |> String.trim()
-    |> String.split("\\n")
+    |> String.split("\\r\\n")
+    |> IO.inspect()
+    |> parse_resp()
   end
+
+  defp parse_resp(["*" <> arr_count, _, _, _]) do
+    arr_count = String.to_integer(arr_count)
+    Enum.map(1..arr_count, fn _ -> "ping" end)
+  end
+
+  defp parse_resp(data), do: data
 
   defp write_data(client, {:error, :closed}) do
     exit(:shutdown)
