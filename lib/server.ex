@@ -7,7 +7,7 @@ defmodule Server do
   def listen() do
     IO.puts("Logs from your program will appear here!")
 
-    {:ok, socket} = :gen_tcp.listen(6378, [:binary, packet: :line, active: false, reuseaddr: true])
+    {:ok, socket} = :gen_tcp.listen(6379, [:binary, packet: :line, active: false, reuseaddr: true])
     server(socket)
   end
 
@@ -15,7 +15,7 @@ defmodule Server do
     {:ok, client} = :gen_tcp.accept(socket)
     {:ok, pid} = Task.Supervisor.start_child(Request.TaskSupervisor, fn -> serve(client) end)
     :ok = :gen_tcp.controlling_process(client, pid)
-    
+
     server(socket)
   end
 
