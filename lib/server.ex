@@ -4,6 +4,9 @@ defmodule Server do
   @doc """
   Listen for incoming connections
   """
+
+  @timeout 100
+
   def listen() do
     IO.puts("Logs from your program will appear here!")
 
@@ -39,7 +42,7 @@ defmodule Server do
   end
 
   defp read_data(client, command) do
-    case :gen_tcp.recv(client, 0, 10) do
+    case :gen_tcp.recv(client, 0, @timeout) do
       {:ok, data} ->
         read_data(client, command <> data)
 
