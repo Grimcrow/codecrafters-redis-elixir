@@ -61,6 +61,7 @@ defmodule Server do
     |> parse_resp()
   end
 
+  # Respond only to ping requests
   defp parse_resp(["*" <> arr_count, _, "ping"]) do
     arr_count = String.to_integer(arr_count)
     Enum.map(1..arr_count, fn _ -> "ping" end)
