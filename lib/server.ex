@@ -5,13 +5,11 @@ defmodule Server do
   Listen for incoming connections
   """
 
-  @timeout 100
-
   def listen() do
     IO.puts("Logs from your program will appear here!")
 
     {:ok, socket} =
-      :gen_tcp.listen(6379, [:binary, packet: :line, active: false, reuseaddr: true])
+      :gen_tcp.listen(6379, [:binary, active: false, reuseaddr: true])
 
     server(socket)
   end
@@ -25,7 +23,7 @@ defmodule Server do
   end
 
   defp serve(client) do
-    case read_data(client, "") do
+    case read_data(client) do
       {:ok, ""} ->
         write_data(client, {:error, :closed})
 
@@ -34,27 +32,15 @@ defmodule Server do
         |> parse_data()
         |> Enum.each(&write_data(client, &1))
 
-      :error ->
+      _ ->
         write_data(client, {:error, :closed})
     end
 
     serve(client)
   end
 
-  defp read_data(client, command) do
-    case :gen_tcp.recv(client, 0, @timeout) do
-      {:ok, data} ->
-        read_data(client, command <> data)
-
-      {:error, :closed} ->
-        {:ok, command}
-
-      {:error, :timeout} ->
-        {:ok, command}
-
-      _ ->
-        :error
-    end
+  defp read_data(client) do
+    :gen_tcp.recv(client, 0)
   end
 
   defp parse_data(data) do
