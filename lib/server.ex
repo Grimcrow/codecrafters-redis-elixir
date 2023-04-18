@@ -7,7 +7,9 @@ defmodule Server do
   def listen() do
     IO.puts("Logs from your program will appear here!")
 
-    {:ok, socket} = :gen_tcp.listen(6379, [:binary, packet: :line, active: false, reuseaddr: true])
+    {:ok, socket} =
+      :gen_tcp.listen(6379, [:binary, packet: :line, active: false, reuseaddr: true])
+
     server(socket)
   end
 
@@ -20,29 +22,39 @@ defmodule Server do
   end
 
   defp serve(client) do
-    case read_data(client) do
-      {:ok, data} ->
-        data
+    case read_data(client, "") do
+      {:ok, command} ->
+        command
         |> parse_data()
         |> Enum.each(&write_data(client, &1))
-      
-      {:error, :closed} = resp ->
-        write_data(client, resp)
+
+      :error ->
+        write_data(client, {:error, :closed})
     end
 
     serve(client)
   end
 
-  defp read_data(client) do
-    :gen_tcp.recv(client, 0)
+  defp read_data(client, command) do
+    case :gen_tcp.recv(client, 0, 10) do
+      {:ok, data} ->
+        read_data(client, command <> data)
+
+      {:error, :closed} ->
+        {:ok, command}
+
+      {:error, :timeout} ->
+        {:ok, command}
+
+      _ ->
+        :error
+    end
   end
 
   defp parse_data(data) do
     data
-    |> IO.inspect()
     |> String.trim()
     |> String.split("\\r\\n")
-    |> IO.inspect()
     |> parse_resp()
   end
 
@@ -53,7 +65,7 @@ defmodule Server do
 
   defp parse_resp(data), do: data
 
-  defp write_data(client, {:error, :closed}) do
+  defp write_data(_client, {:error, :closed}) do
     exit(:shutdown)
   end
 
