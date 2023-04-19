@@ -5,6 +5,8 @@ defmodule Server do
   Listen for incoming connections
   """
 
+  @pong "+PONG\r\n"
+
   def listen() do
     IO.puts("Logs from your program will appear here!")
 
@@ -53,8 +55,10 @@ defmodule Server do
   # Respond only to ping requests
   defp parse_resp(["*" <> arr_count, _, "ping"]) do
     arr_count = String.to_integer(arr_count)
-    Enum.map(1..arr_count, fn _ -> "ping" end)
+    Enum.map(1..arr_count, fn _ -> :unicode.characters_to_binary(@pong) end)
   end
+
+  defp parse_resp(["*" <> _arr_count, _, "echo", _, data]), do: ["+" <> data <> "\r\n"]
 
   defp parse_resp(_data), do: []
 
@@ -62,7 +66,7 @@ defmodule Server do
     exit(:shutdown)
   end
 
-  defp write_data(client, _data) do
-    :gen_tcp.send(client, :unicode.characters_to_binary("+PONG\r\n"))
+  defp write_data(client, data) do
+    :gen_tcp.send(client, data)
   end
 end
