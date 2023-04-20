@@ -7,11 +7,15 @@ defmodule Server do
 
   @pong "+PONG\r\n"
 
+  @ets_table :kv_store
+
   def listen() do
     IO.puts("Logs from your program will appear here!")
 
     {:ok, socket} =
       :gen_tcp.listen(6379, [:binary, active: false, reuseaddr: true])
+
+    :ets.new(@ets_table, [:named_table, :public, read_concurrency: true])
 
     server(socket)
   end
@@ -59,6 +63,18 @@ defmodule Server do
   end
 
   defp parse_resp(["*" <> _arr_count, _, "echo", _, data]), do: ["+" <> data <> "\r\n"]
+
+  defp parse_resp(["*" <> _arr_count, _, "set", _, key, _, value]) do
+    :ets.insert(@ets_table, {key, value})
+    ["+OK\r\n"]
+  end
+
+  defp parse_resp(["*" <> _arr_count, _, "get", _, key]) do
+    case :ets.lookup(@ets_table, key) do
+      [{_, value}] -> ["+#{value}\r\n"]
+      [] -> ["+(nil)\r\n"]
+    end
+  end
 
   defp parse_resp(_data), do: []
 
