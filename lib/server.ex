@@ -69,14 +69,34 @@ defmodule Server do
     ["+OK\r\n"]
   end
 
+  # With expiry **
+  defp parse_resp(["*" <> _arr_count, _, "set", _, key, _, value, _, "px", _, exp]) do
+    {:ok, dt} = DateTime.now("Etc/UTC")
+    exp_dt = DateTime.add(dt, String.to_integer(exp), :millisecond)
+    :ets.insert(@ets_table, {key, value, exp_dt})
+    ["+OK\r\n"]
+  end
+
   defp parse_resp(["*" <> _arr_count, _, "get", _, key]) do
     case :ets.lookup(@ets_table, key) do
       [{_, value}] -> ["+#{value}\r\n"]
+      [{_, value, exp_dt}] -> check_if_expired(value, exp_dt)
       [] -> ["+(nil)\r\n"]
     end
   end
 
   defp parse_resp(_data), do: []
+
+  defp check_if_expired(value, exp_dt) do
+    {:ok, dt} = DateTime.now("Etc/UTC")
+    IO.inspect(exp_dt)
+    IO.inspect(dt)
+    if DateTime.compare(exp_dt, dt) |> IO.inspect() == :gt do
+      ["+#{value}\r\n"]
+    else
+      ["+(nil)\r\n"]
+    end
+  end
 
   defp write_data(_client, {:error, :closed}) do
     exit(:shutdown)
