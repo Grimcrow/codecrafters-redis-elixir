@@ -89,12 +89,11 @@ defmodule Server do
 
   defp check_if_expired(value, exp_dt) do
     {:ok, dt} = DateTime.now("Etc/UTC")
-    IO.inspect(exp_dt)
-    IO.inspect(dt)
+
     if DateTime.compare(exp_dt, dt) |> IO.inspect() == :gt do
       ["+#{value}\r\n"]
     else
-      ["+(nil)\r\n"]
+      ["$-1\r\n"]
     end
   end
 
